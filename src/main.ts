@@ -16,7 +16,7 @@ async function bootstrap() {
     "preflightContinue": false,
   });
   const reflector = app.get(Reflector);
-  // app.useGlobalGuards(new JwtAuthGuard(reflector));
+  app.useGlobalGuards(new JwtAuthGuard(reflector));
   const configService = app.get(ConfigService);
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
