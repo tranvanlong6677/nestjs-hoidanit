@@ -17,8 +17,6 @@ export class UsersService {
   }
   async create(createUserDto: CreateUserDto) {
     const result = await this.userModel.create({ email: createUserDto.email, password: this.hashPassword(createUserDto.password), name: createUserDto.name })
-    console.log(createUserDto)
-
     return result;
   }
 
