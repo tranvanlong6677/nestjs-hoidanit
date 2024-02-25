@@ -1,6 +1,20 @@
-import { OmitType, PartialType } from '@nestjs/mapped-types';
-import { CreateUserDto } from './create-user.dto';
+import { IsEmail } from 'class-validator';
+import { Company } from 'src/companies/schema/company.schema';
 
-export class UpdateUserDto extends OmitType(CreateUserDto, ['password'] as const) {
-    _id:string
+export class UpdateUserDto  {
+    name:string
+
+    @IsEmail()
+    email:string
+
+    age:number
+
+    gender:string
+
+    address:string
+
+    role:string
+
+    company:Company
+    
  } 

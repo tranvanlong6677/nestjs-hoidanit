@@ -6,22 +6,24 @@ import { ConfigService } from '@nestjs/config';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { JwtAuthGuard } from './auth/jwt-auth.guard';
 import { TransformInterceptor } from './core/transform.interceptor';
+import cookieParser from 'cookie-parser';
 
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
   // config cors
   app.enableCors({
-    "origin": "*",
+    "origin": true,
     "methods": "GET,HEAD,PUT,PATCH,POST,DELETE",
     "preflightContinue": false,
+    credentials: true
   });
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector));
   app.useGlobalInterceptors(new TransformInterceptor(reflector));
 
   const configService = app.get(ConfigService);
-  
+
   app.useStaticAssets(join(__dirname, '..', 'public'));
   app.setBaseViewsDir(join(__dirname, '..', 'views'));
 
@@ -31,6 +33,9 @@ async function bootstrap() {
     type: VersioningType.URI,
     defaultVersion: ['1', '2']
   });
+
+  //config cookie
+  app.use(cookieParser());
 
   app.setViewEngine('ejs');
   app.useGlobalPipes(new ValidationPipe());

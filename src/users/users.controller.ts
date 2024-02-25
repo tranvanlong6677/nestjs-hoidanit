@@ -1,43 +1,50 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { TestGuard } from './test.guard';
+import { Public, ResponseMessage, User } from 'src/decorator/customize';
+import { IUser } from './users.interface';
+import { JwtStrategy } from 'src/auth/passport/jwt.strategy';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) { }
 
   @Post()
+  @ResponseMessage("Create a new User")
   create(
-    @Body() createUserDto: CreateUserDto
-    // @Body("email") email:string,
-    // @Body("password") password:string,
-    // @Body("name") name:string
-
+    @Body() createUserDto: CreateUserDto,
+    @User() user: IUser
   ) {
-    console.log(createUserDto)
-    return this.usersService.create(createUserDto);
+    return this.usersService.create(createUserDto, user);
   }
 
-  @UseGuards(TestGuard)
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @ResponseMessage("Fetch user with paginate")
+  @UseGuards(JwtStrategy)
+  fetchUserPaginate(@Query("current") currentPage: string, @Query("pageSize") limit: string, @Query() qs: string) {
+    return this.usersService.fetchUser(currentPage, limit, qs);
   }
-
   @Get(':id')
+  @Public()
+  @ResponseMessage("Fetch user by id")
+
   findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+    const user = this.usersService.findOne(id)
+    return user;
   }
 
   @Patch()
-  update(@Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(updateUserDto);
+  @ResponseMessage("Update a User")
+  @UseGuards(JwtStrategy)
+  update(@Body() updateUserDto: UpdateUserDto, @User() user: IUser) {
+    return this.usersService.update(updateUserDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  @UseGuards(JwtStrategy)
+  @ResponseMessage("Delete a User")
+  remove(@Param('id') id: string, @User() user: IUser) {
+    return this.usersService.remove(id, user);
   }
 }

@@ -22,9 +22,10 @@ export class CompaniesService {
     let { sort } = aqp(qs)
     const defaultLimit = +limit ? +limit : 10
     const offset = (currentPage - 1) * defaultLimit
-    delete filter.page;
+    delete filter.current;
+    delete filter.pageSize;
 
-    console.log(filter)
+
     const totalItems = (await this.companyModel.find( filter )).length
     const totalPages = Math.ceil(totalItems / defaultLimit)
     if (isEmpty(sort)) {

@@ -11,20 +11,14 @@ export class CompaniesController {
 
   @Post()
   create(@Body() createCompanyDto: CreateCompanyDto, @User() user: IUser) {
-    console.log(user)
     return this.companiesService.create(createCompanyDto, user);
   }
 
   @Get()
   @ResponseMessage("Get data success!")
-  findAll(@Query("page") currentPage: string, @Query("limit") limit: string, @Query() qs: string) {
+  findAll(@Query("current") currentPage: string, @Query("pageSize") limit: string, @Query() qs: string) {
     console.log(currentPage, limit, qs)
     return this.companiesService.fetchPaginate(+currentPage, +limit, qs);
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.companiesService.findOne(+id);
   }
 
   @Patch(':id')
