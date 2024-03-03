@@ -13,6 +13,7 @@ import { isEmpty } from 'class-validator';
 export class CompaniesService {
   constructor(@InjectModel(Company.name) private companyModel: SoftDeleteModel<CompanyDocument>) { }
   async create(createCompanyDto: CreateCompanyDto, user: IUser) {
+    // await 
     const result = (await this.companyModel.create({ ...createCompanyDto, createdBy: { _id: new mongoose.mongo.ObjectId(user._id), email: user.email } })).toObject()
     return { ...result };
   }
@@ -26,19 +27,19 @@ export class CompaniesService {
     delete filter.pageSize;
 
 
-    const totalItems = (await this.companyModel.find( filter )).length
+    const totalItems = (await this.companyModel.find(filter)).length
     const totalPages = Math.ceil(totalItems / defaultLimit)
     if (isEmpty(sort)) {
       // @ts-ignore: Unreachable code error
       sort = "-updatedAt"
     }
     const result = await this.companyModel.find(filter)
-    .skip(offset)
-    .limit(defaultLimit)
-    // @ts-ignore: Unreachable code error
-    .sort(sort)
-    .populate(population)
-    .exec()
+      .skip(offset)
+      .limit(defaultLimit)
+      // @ts-ignore: Unreachable code error
+      .sort(sort)
+      .populate(population)
+      .exec()
     return {
       meta: {
         current: currentPage, //trang hiện tại
@@ -51,8 +52,12 @@ export class CompaniesService {
 
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} company`;
+  async findOne(id: string) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return 'Not valid'
+    }
+    const result = await this.companyModel.findOne({ _id: id }).select(['-isDeleted', '-deletedAt', '-createdAt', '-updatedAt'])
+    return result;
   }
 
   async update(id: string, updateCompanyDto: UpdateCompanyDto, user: IUser) {

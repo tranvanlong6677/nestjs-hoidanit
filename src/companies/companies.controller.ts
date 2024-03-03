@@ -2,24 +2,35 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestj
 import { CompaniesService } from './companies.service';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
-import { ResponseMessage, User } from 'src/decorator/customize';
+import { ResponseMessage, User, Public } from 'src/decorator/customize';
 import { IUser } from 'src/users/users.interface';
 
 @Controller('companies')
 export class CompaniesController {
   constructor(private readonly companiesService: CompaniesService) { }
 
-  @Post()
-  create(@Body() createCompanyDto: CreateCompanyDto, @User() user: IUser) {
-    return this.companiesService.create(createCompanyDto, user);
-  }
-
   @Get()
+  @Public()
   @ResponseMessage("Get data success!")
   findAll(@Query("current") currentPage: string, @Query("pageSize") limit: string, @Query() qs: string) {
     console.log(currentPage, limit, qs)
     return this.companiesService.fetchPaginate(+currentPage, +limit, qs);
   }
+
+  @Get(':id')
+  @Public()
+  @ResponseMessage("Get data company by id")
+  async getDataCompanyById(@Param('id') id: string) {
+    return await this.companiesService.findOne(id)
+  }
+
+  @Post()
+  create(@Body() createCompanyDto: CreateCompanyDto, @User() user: IUser) {
+    return this.companiesService.create(createCompanyDto, user);
+  }
+
+
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateCompanyDto: UpdateCompanyDto, @User() user: IUser) {
