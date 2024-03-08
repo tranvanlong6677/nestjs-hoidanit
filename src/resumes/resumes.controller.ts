@@ -35,8 +35,8 @@ export class ResumesController {
 
   @Delete(':id')
   @ResponseMessage("Delete a resume")
-  remove(@Param('id') id: string) {
-    return this.resumesService.remove(id);
+  remove(@Param('id') id: string, @User() user: IUser) {
+    return this.resumesService.remove(id, user);
   }
 
   @Post('by-user')

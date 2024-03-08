@@ -74,7 +74,7 @@ export class ResumesService {
     const resumeCurrent = await this.resumeModel.findOne({ _id: id })
     const newDate = new Date()
     const result = await this.resumeModel.updateOne({ _id: id }, {
-      status:updateResumeDto.status,
+      status: updateResumeDto.status,
       updatedBy: {
         _id: user._id,
         email: user.email
@@ -90,7 +90,13 @@ export class ResumesService {
     return result;
   }
 
-  async remove(id: string) {
+  async remove(id: string, user: IUser) {
+    await this.resumeModel.updateOne({ _id: id }, {
+      deletedBy: {
+        _id: user._id,
+        email: user.email
+      }
+    })
     return await this.resumeModel.softDelete({ _id: id })
   }
 
