@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
@@ -9,6 +9,7 @@ import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { IUser } from './users.interface';
 import aqp from 'api-query-params';
 import { isEmpty } from 'class-validator';
+import { Role } from 'src/roles/schemas/role.schema';
 
 
 @Injectable()
@@ -74,11 +75,17 @@ export class UsersService {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return 'Not valid'
     }
-    return this.userModel.findOne({ _id: id }).select('-password')
+    return this.userModel.findOne({ _id: id }).select('-password').populate({ path: "role", select: { name: 1, _id: 1 } })
   }
 
-  findOneByUsername(username: string) {
-    return this.userModel.findOne({ email: username });
+  async findOneByUsername(username: string) {
+    const result = await this.userModel.findOne({ email: username })
+      .populate({
+        path: 'role', select: {
+          name: 1, permissions: 1
+        },
+      })
+    return result
   }
   isValidPassword(password: string, hashPassword: string) {
     return compareSync(password, hashPassword)
@@ -93,6 +100,10 @@ export class UsersService {
   async remove(id: string, user: IUser) {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return 'Not valid'
+    }
+    const foundUser = await this.userModel.findById(id)
+    if (foundUser.email === 'admin@gmail.com') {
+      throw new BadRequestException("Không thể xóa tài khoản admin")
     }
     await this.userModel.updateOne({ _id: id }, { deletedBy: { _id: user._id, name: user.name } })
     return await this.userModel.softDelete({ _id: id });

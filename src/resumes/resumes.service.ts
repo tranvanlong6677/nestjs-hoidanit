@@ -101,6 +101,6 @@ export class ResumesService {
   }
 
   async getCvByUser(userId: string) {
-    return this.resumeModel.find({ userId })
+    return this.resumeModel.find({ userId }).sort("-createdAt").populate([{ path: "companyId", select: { name: 1 } }, { path: "jobId", select: { name: 1 } }])
   }
 }

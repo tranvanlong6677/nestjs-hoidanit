@@ -7,19 +7,15 @@ import { Role, RoleDocument } from './schemas/role.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import aqp from 'api-query-params';
 import { isEmpty } from 'class-validator';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class RolesService {
   constructor(@InjectModel(Role.name) private roleModel: SoftDeleteModel<RoleDocument>) { }
   async create(createRoleDto: CreateRoleDto, user: IUser) {
     const newDate = new Date()
-    const allRole = await this.findAll()
-    let checkDuplicateName = false
-    allRole.forEach((item: any) => {
-      if (item.name === createRoleDto.name) {
-        checkDuplicateName = true
-      }
-    })
+    const checkDuplicateName = await this.roleModel.findOne({ name: createRoleDto.name })
+
     if (checkDuplicateName) {
       throw new BadRequestException("Trùng tên role đã tạo")
     } else {
@@ -31,10 +27,6 @@ export class RolesService {
       })
     }
 
-  }
-
-  async findAll() {
-    return await this.roleModel.find({})
   }
 
   async fetchRolePaginate(limit: string, currentPage: string, qs: string) {
@@ -72,32 +64,32 @@ export class RolesService {
   }
 
   async findOne(id: string) {
-    return await this.roleModel.findOne({ _id: id })
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestException("not found")
+    }
+    return await this.roleModel.findOne({ _id: id }).populate({ path: "permissions", select: { _id: 1, apiPath: 1, name: 1, method: 1, module: 1 } })
+
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestException("not found")
+    }
     const newDate = new Date()
-    const allRole = await this.findAll()
-    let checkDuplicateName = false
-    allRole.forEach((item: any) => {
-      if (item.name === updateRoleDto.name && item._id.toString() !== id) {
-        checkDuplicateName = true
+
+    return await this.roleModel.updateOne({ _id: id }, {
+      ...updateRoleDto, updatedAt: newDate, updatedBy: {
+        _id: user._id,
+        email: user.email
       }
     })
-
-    if (checkDuplicateName) {
-      throw new BadRequestException("Trùng tên role đã tạo")
-    } else {
-      return await this.roleModel.updateOne({ _id: id }, {
-        ...updateRoleDto, updatedAt: newDate, updatedBy: {
-          _id: user._id,
-          email: user.email
-        }
-      })
-    }
   }
 
   async remove(id: string, user: IUser) {
+    const foundRole = await this.roleModel.findById(id)
+    if (foundRole.name === 'ADMIN') {
+      throw new BadRequestException("Không thể xóa role admin")
+    }
     await this.roleModel.updateOne({ _id: id }, {
       deletedBy: {
         _id: user._id,

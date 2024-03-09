@@ -7,6 +7,7 @@ import { Permission, PermissionDocument } from './schemas/permission.schema';
 import { IUser } from 'src/users/users.interface';
 import aqp from 'api-query-params';
 import { isEmpty } from 'class-validator';
+import mongoose from 'mongoose';
 
 @Injectable()
 export class PermissionsService {
@@ -14,14 +15,8 @@ export class PermissionsService {
 
   async create(createPermissionDto: CreatePermissionDto, user: IUser) {
     const newDate = new Date()
-    const allPermission = await this.findAll()
-    let checkDuplicate = false
-    allPermission.forEach(async (item: any) => {
-      if (createPermissionDto.apiPath === item.apiPath && createPermissionDto.method === item.method) {
-        checkDuplicate = true
-      }
+    const checkDuplicate = await this.permissionModel.findOne({ apiPath: createPermissionDto.apiPath, method: createPermissionDto.method })
 
-    })
     if (checkDuplicate) {
       throw new BadRequestException("API đã tồn tại trong permission")
     }
@@ -40,10 +35,6 @@ export class PermissionsService {
 
   }
 
-  async findAll() {
-    const result = await this.permissionModel.find({})
-    return result;
-  }
 
   async fetchAllPaginate(limit: string, currentPage: string, qs: string) {
     const { filter, population, projection } = aqp(qs);
@@ -82,11 +73,15 @@ export class PermissionsService {
 
 
   async findOne(id: string) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestException("not found")
+    }
+
     return await this.permissionModel.findOne({ _id: id })
   }
 
   async update(id: string, updatePermissionDto: UpdatePermissionDto, user: IUser) {
-    console.log(updatePermissionDto)
+
     const newDate = new Date()
     return await this.permissionModel.updateOne({ _id: id }, {
       ...updatePermissionDto, updatedAt: newDate, updatedBy: {
@@ -97,6 +92,9 @@ export class PermissionsService {
   }
 
   async remove(id: string, user: IUser) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestException("not found")
+    }
     await this.permissionModel.updateOne({ _id: id }, {
       deletedBy: {
         _id: user._id,

@@ -1,20 +1,21 @@
 import { IsEmail } from 'class-validator';
+import mongoose from 'mongoose';
 import { Company } from 'src/companies/schema/company.schema';
 
-export class UpdateUserDto  {
-    name:string
+export class UpdateUserDto {
+    name: string
 
     @IsEmail()
-    email:string
+    email: string
 
-    age:number
+    age: number
 
-    gender:string
+    gender: string
 
-    address:string
+    address: string
 
-    role:string
+    role: mongoose.Schema.Types.ObjectId
 
-    company:Company
-    
- } 
+    company: Company
+
+} 

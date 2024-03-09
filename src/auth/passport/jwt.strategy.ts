@@ -19,6 +19,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         // gán payload vào biến req.user
         return {
             _id, name, email, role
+
         };
     }
 }

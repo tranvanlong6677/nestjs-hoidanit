@@ -1,5 +1,5 @@
 import { Type } from "class-transformer";
-import { IsEmail, IsNotEmpty, IsNotEmptyObject, IsObject, ValidateNested } from "class-validator";
+import { IsEmail, IsMongoId, IsNotEmpty, IsNotEmptyObject, IsObject, ValidateNested } from "class-validator";
 import mongoose from "mongoose";
 
 class Company {
@@ -30,7 +30,8 @@ export class RegisterUserDto {
     gender: string
 
     @IsNotEmpty({ message: "Role khong duoc de trong" })
-    role: string = 'USER'
+    @IsMongoId({ message: "Role phai co dinh dang mongoId" })
+    role: mongoose.Schema.Types.ObjectId
 
 }
 export class CreateUserDto {
@@ -54,11 +55,11 @@ export class CreateUserDto {
     gender: string
 
     @IsNotEmpty({ message: "Role khong duoc de trong" })
-    role: string
+    role: mongoose.Schema.Types.ObjectId
 
     @IsNotEmptyObject()
     @IsObject()
     @ValidateNested()
     @Type(() => Company)
-    company: Company 
+    company: Company
 }

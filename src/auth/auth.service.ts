@@ -15,14 +15,13 @@ import { Response } from 'express';
 export class AuthService {
     constructor(private usersService: UsersService, private jwtService: JwtService, @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>, private configService: ConfigService) { }
     async validateUser(username: string, pass: string): Promise<any> {
-        const user = await this.usersService.findOneByUsername(username);
+        const user = (await this.usersService.findOneByUsername(username));
         if (user) {
             const isValid = this.usersService.isValidPassword(pass, user.password)
             if (isValid) {
                 return user
             }
         }
-
         return null;
     }
     async login(user: IUser, response: Response) {
