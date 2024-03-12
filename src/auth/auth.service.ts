@@ -10,22 +10,35 @@ import { ConfigService } from '@nestjs/config';
 import mongoose from 'mongoose';
 import ms from 'ms';
 import { Response } from 'express';
+import { USER_ROLE } from 'src/databases/sample';
+import { Role, RoleDocument } from 'src/roles/schemas/role.schema';
+import { RolesService } from 'src/roles/roles.service';
 
 @Injectable()
 export class AuthService {
-    constructor(private usersService: UsersService, private jwtService: JwtService, @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>, private configService: ConfigService) { }
+    constructor(private usersService: UsersService,
+        private jwtService: JwtService, @InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
+        private configService: ConfigService,
+        @InjectModel(Role.name) private roleModel: SoftDeleteModel<RoleDocument>,
+        private rolesService: RolesService) { }
     async validateUser(username: string, pass: string): Promise<any> {
         const user = (await this.usersService.findOneByUsername(username));
         if (user) {
             const isValid = this.usersService.isValidPassword(pass, user.password)
             if (isValid) {
-                return user
+                const userRole = (user.role as unknown) as { _id: string, name: string }
+                const temp = await this.rolesService.findOne(userRole._id)
+                const objUser = {
+                    ...user.toObject(),
+                    permissions: temp?.permissions ?? []
+                }
+                return objUser
             }
         }
         return null;
     }
     async login(user: IUser, response: Response) {
-        const { _id, name, email, role } = user
+        const { _id, name, email, role, permissions } = user
         const payload = {
             sub: 'token login', iss: "from server",
             _id, name, email, role
@@ -37,20 +50,23 @@ export class AuthService {
         return {
             access_token: this.jwtService.sign(payload),
             user: {
-                _id, name, email, role
+                _id, name, email, role, permissions
 
             }
         };
     }
 
     async register(registerUserDto: RegisterUserDto) {
-        const newId = new mongoose.Types.ObjectId()
-        const result = (await this.userModel.create({ ...registerUserDto, _id: newId, role: "USER", password: this.usersService.hashPassword(registerUserDto.password) })).toObject()
-        console.log(result)
-        return {
-            _id: newId,
-            createdAt: new Date()
+        const { name, email, password, address, gender, age } = registerUserDto
+        const isExist = await this.userModel.findOne({ email })
+        if (isExist) {
+            throw new BadRequestException(`Email ${email} đã tồn tại`)
         }
+
+        const userRole = await this.roleModel.findOne({ name: USER_ROLE })
+        const result = (await this.userModel.create({ name, email, role: userRole?._id, age, gender, address, password: this.usersService.hashPassword(password) })).toObject()
+        console.log(result)
+        return result
     }
 
     createRefreshToken = (payload: any) => {
@@ -69,8 +85,8 @@ export class AuthService {
             })
 
             let user = await this.usersService.getUserByToken(refreshToken)
+            console.log("user", user)
             if (user) {
-                console.log("check user", user)
                 const { _id, name, email, role } = user
                 const payload = {
                     sub: 'token refresh', iss: "from server",
@@ -80,12 +96,15 @@ export class AuthService {
                 const refreshToken = this.createRefreshToken(payload)
                 await this.usersService.updateUserToken(refreshToken, _id.toString())
                 response.clearCookie("refresh_token")
-
                 response.cookie('refresh_token', refreshToken, { httpOnly: true, maxAge: ms(this.configService.get<string>("JWT_REFRESH_TOKEN_EXPIRES")) })
+                // const userRole = await this.rolesService.findOne({ role._id.toString() })
+                const userRole = user.role as unknown as { _id: string, name: string }
+                const temp = await this.rolesService.findOne(userRole._id)
                 return {
                     access_token: this.jwtService.sign(payload),
                     user: {
-                        _id, name, email, role
+                        _id, name, email, role,
+                        permissions: temp?.permissions ?? []
                     }
 
                 };

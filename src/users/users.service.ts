@@ -9,12 +9,14 @@ import { SoftDeleteModel } from 'soft-delete-plugin-mongoose';
 import { IUser } from './users.interface';
 import aqp from 'api-query-params';
 import { isEmpty } from 'class-validator';
-import { Role } from 'src/roles/schemas/role.schema';
+import { Role, RoleDocument } from 'src/roles/schemas/role.schema';
 
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>) { }
+  constructor(@InjectModel(User.name) private userModel: SoftDeleteModel<UserDocument>,
+    @InjectModel(Role.name) private roleModel: SoftDeleteModel<RoleDocument>
+  ) { }
   hashPassword = (password: string) => {
     var salt = genSaltSync(10);
     return hashSync(password, salt)
@@ -82,7 +84,7 @@ export class UsersService {
     const result = await this.userModel.findOne({ email: username })
       .populate({
         path: 'role', select: {
-          name: 1, permissions: 1
+          name: 1
         },
       })
     return result
@@ -102,7 +104,7 @@ export class UsersService {
       return 'Not valid'
     }
     const foundUser = await this.userModel.findById(id)
-    if (foundUser.email === 'admin@gmail.com') {
+    if (foundUser && foundUser.email === 'admin@gmail.com') {
       throw new BadRequestException("Không thể xóa tài khoản admin")
     }
     await this.userModel.updateOne({ _id: id }, { deletedBy: { _id: user._id, name: user.name } })
@@ -116,6 +118,6 @@ export class UsersService {
   }
 
   getUserByToken = async (refreshToken: string) => {
-    return this.userModel.findOne({ refreshToken })
+    return (await this.userModel.findOne({ refreshToken })).populate({ path: "role", select: { name: 1 } })
   }
 }

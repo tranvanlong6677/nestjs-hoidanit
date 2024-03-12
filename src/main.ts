@@ -20,7 +20,7 @@ async function bootstrap() {
   });
   const reflector = app.get(Reflector);
   app.useGlobalGuards(new JwtAuthGuard(reflector));
-  app.useGlobalInterceptors(new TransformInterceptor(reflector));
+  app.useGlobalInterceptors(new TransformInterceptor(reflector));// config dữ liệu trả về cho client
 
   const configService = app.get(ConfigService);
 

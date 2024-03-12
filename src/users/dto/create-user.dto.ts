@@ -29,9 +29,9 @@ export class RegisterUserDto {
     @IsNotEmpty({ message: "Gender khong duoc de trong" })
     gender: string
 
-    @IsNotEmpty({ message: "Role khong duoc de trong" })
-    @IsMongoId({ message: "Role phai co dinh dang mongoId" })
-    role: mongoose.Schema.Types.ObjectId
+    // @IsNotEmpty({ message: "Role khong duoc de trong" })
+    // @IsMongoId({ message: "Role phai co dinh dang mongoId" })
+    // role: mongoose.Schema.Types.ObjectId
 
 }
 export class CreateUserDto {
