@@ -16,7 +16,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     }
 
     async validate(payload: IUser) {
-        console.log("validate jwt strategy")
         const { _id, name, email, role } = payload
         // gán payload vào biến req.user
         const userRole = role as unknown as { _id: string, name: string }

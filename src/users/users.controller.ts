@@ -25,10 +25,10 @@ export class UsersController {
   fetchUserPaginate(@Query("current") currentPage: string, @Query("pageSize") limit: string, @Query() qs: string) {
     return this.usersService.fetchUser(currentPage, limit, qs);
   }
+
   @Get(':id')
   @Public()
   @ResponseMessage("Fetch user by id")
-
   findOne(@Param('id') id: string) {
     const user = this.usersService.findOne(id)
     return user;
