@@ -38,7 +38,9 @@ async function bootstrap() {
   app.use(cookieParser());
 
   app.setViewEngine('ejs');
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({
+    whitelist: true
+  }));
   await app.listen(configService.get<string>("PORT"));
 }
 bootstrap();

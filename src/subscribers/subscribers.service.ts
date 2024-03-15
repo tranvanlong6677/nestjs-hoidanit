@@ -31,6 +31,11 @@ export class SubscribersService {
     }
   }
 
+  async getUserSkills(user: IUser) {
+    const result = await this.subscriberModel.findOne({ email: user.email }, { skills: 1 })
+    return result
+  }
+
   async findAll(currentPage: string, limit: string, qs: string) {
     const { filter, population } = aqp(qs);
     let { sort } = aqp(qs)
@@ -72,16 +77,16 @@ export class SubscribersService {
     return await this.subscriberModel.findOne({ _id: id })
   }
 
-  async update(id: string, updateSubscriberDto: UpdateSubscriberDto, user: IUser) {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      throw new BadRequestException("not found")
-    }
-    return await this.subscriberModel.updateOne({ _id: id }, {
+  async update(updateSubscriberDto: UpdateSubscriberDto, user: IUser) {
+
+    return await this.subscriberModel.updateOne({ email: user.email }, {
       ...updateSubscriberDto, updatedBy: {
         _id: user._id,
         email: user.email
-      }
-    })
+      },
+    }, { upsert: true } // nếu bản ghi subscriber đã tồn tại thì update, còn chưa tồn tại thì insert
+    )
+    // 
   }
 
   async remove(id: string, user: IUser) {
