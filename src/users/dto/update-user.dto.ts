@@ -3,19 +3,18 @@ import mongoose from 'mongoose';
 import { Company } from 'src/companies/schema/company.schema';
 
 export class UpdateUserDto {
-    name: string
+  name: string;
 
-    @IsEmail()
-    email: string
+  @IsEmail()
+  email: string;
 
-    age: number
+  age: number;
 
-    gender: string
+  gender: string;
 
-    address: string
+  address: string;
 
-    role: mongoose.Schema.Types.ObjectId
+  role: mongoose.Schema.Types.ObjectId;
 
-    company: Company
-
-} 
+  company: Company;
+}
